@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-trail-50: #FAF6F1;
+  --color-trail-100: #F0E6D6;
+  --color-trail-200: #D4C4A8;
+  --color-trail-300: #B8A07C;
+  --color-trail-400: #8B6914;
+  --color-trail-500: #6B4423;
+  --color-trail-600: #4A2D12;
+  --color-trail-700: #2C1810;
+
+  --color-forest-300: #7CB890;
+  --color-forest-400: #5A9E6F;
+  --color-forest-500: #4A7C59;
+  --color-forest-600: #3A6147;
+  --color-forest-700: #2A4635;
+
+  --color-rust-400: #C87941;
+  --color-rust-500: #A65D2E;
+  --color-rust-600: #8B4D26;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-trail-50);
+  color: var(--color-trail-700);
+  font-family: var(--font-sans);
+}
+
+/* Flashcard flip animation */
+.flashcard-container {
+  perspective: 1000px;
+}
+
+.flashcard-inner {
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.flashcard-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+/* Daily goal ring animation */
+@keyframes ring-fill {
+  from { stroke-dashoffset: 283; }
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
