@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trilingual-trail-v1';
+const CACHE_NAME = 'duo-panda-v1';
 const STATIC_ASSETS = [
   '/',
   '/dashboard',

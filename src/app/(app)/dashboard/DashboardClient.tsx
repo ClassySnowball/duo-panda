@@ -74,7 +74,7 @@ export default function DashboardClient({
           href={`/review/${decks[0].id}?direction=${direction}`}
           className="block bg-forest-500 hover:bg-forest-600 text-white text-center py-4 rounded-2xl font-bold text-lg transition-colors shadow-sm"
         >
-          🥾 Start Learning
+          🐼 Start Learning
         </Link>
       )}
 

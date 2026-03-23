@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Trilingual Trail",
+  title: "Duo Panda",
   description: "Learn Dutch, Polish & English with spaced repetition",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Trail",
+    title: "Duo Panda",
   },
 };
 

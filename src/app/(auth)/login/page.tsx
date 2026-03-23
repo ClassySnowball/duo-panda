@@ -37,9 +37,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="text-5xl mb-3">🥾</div>
-          <h1 className="text-3xl font-bold text-trail-700">Trilingual Trail</h1>
-          <p className="text-trail-500 mt-2">Discover words like exploring new trails</p>
+          <img src="/icons/icon-192.png" alt="Duo Panda" className="w-24 h-24 mx-auto mb-3 rounded-2xl" />
+          <h1 className="text-3xl font-bold text-trail-700">Duo Panda</h1>
+          <p className="text-trail-500 mt-2">Learn languages one card at a time</p>
         </div>
 
         {sent ? (

@@ -42,8 +42,8 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
     const accuracy = stats.reviewed > 0 ? Math.round((stats.correct / stats.reviewed) * 100) : 0;
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-6 page-enter">
-        <div className="text-6xl mb-4">🏔️</div>
-        <h2 className="text-2xl font-bold text-trail-700 mb-2">Trail Complete!</h2>
+        <img src="/icons/icon-192.png" alt="Duo Panda" className="w-20 h-20 rounded-2xl mb-4" />
+        <h2 className="text-2xl font-bold text-trail-700 mb-2">Session Complete!</h2>
         <p className="text-trail-500 mb-8 text-center">
           {stats.reviewed === 0
             ? 'No cards due for review. Come back later!'
@@ -71,7 +71,7 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
           href="/dashboard"
           className="bg-forest-500 hover:bg-forest-600 text-white px-8 py-3 rounded-xl font-medium transition-colors"
         >
-          Back to Trail
+          Back to Home
         </Link>
       </div>
     );

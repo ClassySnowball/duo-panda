@@ -40,8 +40,8 @@ export default function SignupPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-trail-50">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <div className="text-5xl mb-3">🏕️</div>
-          <h1 className="text-3xl font-bold text-trail-700">Join the Trail</h1>
+          <img src="/icons/icon-192.png" alt="Duo Panda" className="w-24 h-24 mx-auto mb-3 rounded-2xl" />
+          <h1 className="text-3xl font-bold text-trail-700">Join Duo Panda</h1>
           <p className="text-trail-500 mt-2">Start your language learning journey</p>
         </div>
 

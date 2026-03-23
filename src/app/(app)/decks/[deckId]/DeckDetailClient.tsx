@@ -56,7 +56,7 @@ export default function DeckDetailClient({ deck, cards, dueCount }: DeckDetailCl
         href={`/review/${deck.id}?direction=${direction}`}
         className="block bg-forest-500 hover:bg-forest-600 text-white text-center py-4 rounded-2xl font-bold text-lg transition-colors"
       >
-        🥾 Start Review
+        🐼 Start Review
       </Link>
 
       {/* Card list */}

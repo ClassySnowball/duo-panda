@@ -1,6 +1,6 @@
 {
-  "name": "Trilingual Trail",
-  "short_name": "Trail",
+  "name": "Duo Panda",
+  "short_name": "Duo Panda",
   "description": "Learn Dutch, Polish & English with spaced repetition",
   "start_url": "/dashboard",
   "display": "standalone",
