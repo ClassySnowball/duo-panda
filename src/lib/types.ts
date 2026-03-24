@@ -32,9 +32,9 @@ export interface Deck {
 export interface Card {
   id: string;
   deck_id: string;
-  dutch: string;
-  polish: string;
-  english: string;
+  dutch: string | null;
+  polish: string | null;
+  english: string | null;
   pronunciation_pl: string | null;
   pronunciation_nl: string | null;
   example_sentence_nl: string | null;

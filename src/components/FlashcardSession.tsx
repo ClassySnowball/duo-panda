@@ -105,8 +105,8 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
       {/* Card area */}
       <div className={`flex-1 flex flex-col items-center justify-center px-6 py-8 gap-8 transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         <Flashcard
-          front={currentCard[fromKey]}
-          back={currentCard[toKey]}
+          front={currentCard[fromKey]!}
+          back={currentCard[toKey]!}
           fromLang={fromLang}
           toLang={toLang}
           flipped={isFlipped}

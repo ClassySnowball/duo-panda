@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import DirectionPicker from '@/components/DirectionPicker';
+import NotificationToggle from '@/components/NotificationToggle';
 import type { Direction } from '@/lib/constants';
 
 export default function SettingsPage() {
@@ -123,6 +124,12 @@ export default function SettingsPage() {
       <div className="bg-white rounded-2xl border border-trail-200 p-5 space-y-3">
         <h2 className="text-sm font-medium text-trail-500">Default Direction</h2>
         <DirectionPicker value={preferredDirection} onChange={setPreferredDirection} />
+      </div>
+
+      {/* Notifications */}
+      <div className="bg-white rounded-2xl border border-trail-200 p-5 space-y-3">
+        <h2 className="text-sm font-medium text-trail-500">Notifications</h2>
+        <NotificationToggle />
       </div>
 
       {/* Save */}

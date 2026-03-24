@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import AddCardForm from '@/components/AddCardForm';
+import ImportCards from '@/components/ImportCards';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewCardPage() {
+export default async function ImportPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -19,13 +19,12 @@ export default async function NewCardPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-trail-700">Add New Card</h1>
-        <Link href="/cards/import" className="text-sm text-forest-500 hover:text-forest-600 font-medium">
-          Bulk import
+        <h1 className="text-xl font-bold text-trail-700">Import Cards</h1>
+        <Link href="/cards/new" className="text-sm text-forest-500 hover:text-forest-600 font-medium">
+          Add single card
         </Link>
       </div>
-      <p className="text-sm text-trail-500">Add a word, phrase, or sentence in at least two languages.</p>
-      <AddCardForm decks={decks ?? []} />
+      <ImportCards decks={decks ?? []} userId={user.id} />
     </div>
   );
 }

@@ -65,6 +65,9 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
     const newCards: ReviewCard[] = [];
 
     for (const card of deckCards) {
+      // Skip cards missing a language needed for this direction
+      if (!card[dir?.fromKey ?? 'dutch'] || !card[dir?.toKey ?? 'polish']) continue;
+
       const progress = progressMap.get(card.id);
       if (progress) {
         if (new Date(progress.next_review_at) <= now) {

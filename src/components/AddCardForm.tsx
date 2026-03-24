@@ -17,33 +17,42 @@ export default function AddCardForm({ decks, onCardAdded }: AddCardFormProps) {
   const [deckId, setDeckId] = useState(decks[0]?.id || '');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!dutch.trim() || !polish.trim() || !english.trim() || !deckId) return;
+    setError('');
+    const filled = [dutch.trim(), polish.trim(), english.trim()].filter(Boolean).length;
+    if (filled < 2) {
+      setError('Please fill in at least 2 of the 3 languages.');
+      return;
+    }
+    if (!deckId) return;
 
     setSaving(true);
     setSuccess(false);
 
-    const { error } = await supabase.from('cards').insert({
+    const { error: insertError } = await supabase.from('cards').insert({
       deck_id: deckId,
-      dutch: dutch.trim(),
-      polish: polish.trim(),
-      english: english.trim(),
+      dutch: dutch.trim() || null,
+      polish: polish.trim() || null,
+      english: english.trim() || null,
       card_type: cardType,
     });
 
     setSaving(false);
 
-    if (!error) {
+    if (!insertError) {
       setSuccess(true);
       setDutch('');
       setPolish('');
       setEnglish('');
       onCardAdded?.();
       setTimeout(() => setSuccess(false), 2000);
+    } else {
+      setError(insertError.message);
     }
   };
 
@@ -57,7 +66,6 @@ export default function AddCardForm({ decks, onCardAdded }: AddCardFormProps) {
           onChange={(e) => setDutch(e.target.value)}
           className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
           placeholder="e.g., hond"
-          required
         />
       </div>
 
@@ -69,7 +77,6 @@ export default function AddCardForm({ decks, onCardAdded }: AddCardFormProps) {
           onChange={(e) => setPolish(e.target.value)}
           className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
           placeholder="e.g., pies"
-          required
         />
       </div>
 
@@ -81,7 +88,6 @@ export default function AddCardForm({ decks, onCardAdded }: AddCardFormProps) {
           onChange={(e) => setEnglish(e.target.value)}
           className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
           placeholder="e.g., dog"
-          required
         />
       </div>
 
@@ -114,6 +120,10 @@ export default function AddCardForm({ decks, onCardAdded }: AddCardFormProps) {
           </select>
         </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-rust-500">{error}</p>
+      )}
 
       <button
         type="submit"
