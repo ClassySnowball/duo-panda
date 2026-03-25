@@ -3,16 +3,20 @@
 import { useReviewSession } from '@/hooks/useReviewSession';
 import Flashcard from './Flashcard';
 import QualityRating from './QualityRating';
-import StreakDisplay from './StreakDisplay';
+import TypingCard from './TypingCard';
+import XPGainToast from './XPGainToast';
+import LevelUpModal from './LevelUpModal';
 import Link from 'next/link';
+import type { ReviewMode } from '@/lib/constants';
 
 interface FlashcardSessionProps {
   deckId: string;
   direction: string;
   newCardsLimit: number;
+  mode?: ReviewMode;
 }
 
-export default function FlashcardSession({ deckId, direction, newCardsLimit }: FlashcardSessionProps) {
+export default function FlashcardSession({ deckId, direction, newCardsLimit, mode = 'flip' }: FlashcardSessionProps) {
   const {
     currentCard,
     isFlipped,
@@ -28,6 +32,10 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
     toLang,
     fromKey,
     toKey,
+    sessionXP,
+    lastXPGain,
+    levelUp,
+    dismissLevelUp,
   } = useReviewSession({ deckId, direction, newCardsLimit });
 
   if (isLoading) {
@@ -51,7 +59,7 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
         </p>
 
         {stats.reviewed > 0 && (
-          <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-4 gap-4 mb-8">
             <div className="text-center">
               <div className="text-2xl font-bold text-forest-500">{stats.reviewed}</div>
               <div className="text-xs text-trail-400">Reviewed</div>
@@ -63,6 +71,10 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
             <div className="text-center">
               <div className="text-2xl font-bold text-forest-500">{accuracy}%</div>
               <div className="text-xs text-trail-400">Accuracy</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-forest-500">+{sessionXP}</div>
+              <div className="text-xs text-trail-400">XP</div>
             </div>
           </div>
         )}
@@ -81,8 +93,11 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Level up modal */}
+      {levelUp && <LevelUpModal levelInfo={levelUp} onDismiss={dismissLevelUp} />}
+
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="relative flex items-center justify-between px-4 py-3">
         <Link href="/dashboard" className="text-trail-400 hover:text-trail-600">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -92,6 +107,7 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
           {currentIndex + 1} / {totalCards}
         </span>
         <div className="w-6" />
+        <XPGainToast xp={lastXPGain} />
       </div>
 
       {/* Progress bar */}
@@ -103,25 +119,38 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit }: F
       </div>
 
       {/* Card area */}
-      <div className={`flex-1 flex flex-col items-center justify-center px-6 py-8 gap-8 transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-        <Flashcard
-          front={currentCard[fromKey]!}
-          back={currentCard[toKey]!}
-          fromLang={fromLang}
-          toLang={toLang}
-          flipped={isFlipped}
-          onFlip={flip}
-        />
-
-        {isFlipped ? (
-          <QualityRating onRate={handleRate} />
+      <div className={`flex-1 flex flex-col items-center justify-center px-6 py-8 gap-8 ${mode === 'flip' ? `transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'}` : ''}`}>
+        {mode === 'type' ? (
+          <TypingCard
+            front={currentCard[fromKey]!}
+            correctAnswer={currentCard[toKey]!}
+            fromLang={fromLang}
+            toLang={toLang}
+            onRate={handleRate}
+            isTransitioning={isTransitioning}
+          />
         ) : (
-          <button
-            onClick={flip}
-            className="bg-trail-200 hover:bg-trail-300 text-trail-600 px-8 py-3 rounded-xl font-medium transition-colors"
-          >
-            Show Answer
-          </button>
+          <>
+            <Flashcard
+              front={currentCard[fromKey]!}
+              back={currentCard[toKey]!}
+              fromLang={fromLang}
+              toLang={toLang}
+              flipped={isFlipped}
+              onFlip={flip}
+            />
+
+            {isFlipped ? (
+              <QualityRating onRate={handleRate} />
+            ) : (
+              <button
+                onClick={flip}
+                className="bg-trail-200 hover:bg-trail-300 text-trail-600 px-8 py-3 rounded-xl font-medium transition-colors"
+              >
+                Show Answer
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

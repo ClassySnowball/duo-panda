@@ -33,6 +33,13 @@ export default async function DashboardPage() {
     .eq('date', today)
     .single();
 
+  // Fetch XP
+  const { data: userXP } = await supabase
+    .from('user_xp')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
   // Fetch decks with due counts
   const { data: decks } = await supabase
     .from('decks')
@@ -53,6 +60,7 @@ export default async function DashboardPage() {
       dailyGoalReviews={profile?.daily_goal_reviews ?? 20}
       dailyGoalNewWords={profile?.daily_goal_new_words ?? 5}
       preferredDirection={profile?.preferred_direction ?? 'PL->NL'}
+      totalXP={userXP?.total_xp ?? 0}
       decks={decks ?? []}
     />
   );

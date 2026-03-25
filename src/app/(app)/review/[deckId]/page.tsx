@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function ReviewPage({ params, searchParams }: {
   params: Promise<{ deckId: string }>;
-  searchParams: Promise<{ direction?: string }>;
+  searchParams: Promise<{ direction?: string; mode?: string }>;
 }) {
   const { deckId } = await params;
-  const { direction } = await searchParams;
+  const { direction, mode } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -20,11 +20,14 @@ export default async function ReviewPage({ params, searchParams }: {
     .eq('id', user.id)
     .single();
 
+  const reviewMode = mode === 'type' ? 'type' : 'flip';
+
   return (
     <ReviewClient
       deckId={deckId}
       direction={direction || 'PL->NL'}
       newCardsLimit={profile?.daily_goal_new_words ?? 5}
+      mode={reviewMode}
     />
   );
 }

@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { sm2 } from '@/lib/sm2';
 import { DIRECTIONS } from '@/lib/constants';
+import { calculateXPForReview, getLevelInfo } from '@/lib/xp';
+import type { LevelInfo } from '@/lib/xp';
 import type { ReviewCard, Card, UserCardProgress } from '@/lib/types';
 
 interface UseReviewSessionOptions {
@@ -27,6 +29,9 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
   const [isComplete, setIsComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [stats, setStats] = useState<SessionStats>({ reviewed: 0, newLearned: 0, correct: 0, total: 0 });
+  const [sessionXP, setSessionXP] = useState(0);
+  const [lastXPGain, setLastXPGain] = useState(0);
+  const [levelUp, setLevelUp] = useState<LevelInfo | null>(null);
 
   const supabase = createClient();
   const dir = DIRECTIONS.find(d => d.value === direction);
@@ -205,6 +210,37 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
       });
     }
 
+    // Update XP
+    const xpEarned = calculateXPForReview(quality, currentCard.isNew);
+    if (xpEarned > 0) {
+      const { data: currentXP } = await supabase
+        .from('user_xp')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      const oldTotal = currentXP?.total_xp ?? 0;
+      const newTotal = oldTotal + xpEarned;
+      const oldLevelInfo = getLevelInfo(oldTotal);
+      const newLevelInfo = getLevelInfo(newTotal);
+
+      await supabase.from('user_xp').upsert({
+        user_id: user.id,
+        total_xp: newTotal,
+        current_level: newLevelInfo.level,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id',
+      });
+
+      setSessionXP(prev => prev + xpEarned);
+      setLastXPGain(xpEarned);
+
+      if (newLevelInfo.level > oldLevelInfo.level) {
+        setLevelUp(newLevelInfo);
+      }
+    }
+
     // Update session stats
     setStats(s => ({
       ...s,
@@ -235,6 +271,8 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
     setIsFlipped(true);
   }, []);
 
+  const dismissLevelUp = useCallback(() => setLevelUp(null), []);
+
   return {
     currentCard,
     isFlipped,
@@ -250,5 +288,9 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
     toLang: dir?.to ?? '',
     fromKey: dir?.fromKey ?? 'dutch',
     toKey: dir?.toKey ?? 'polish',
+    sessionXP,
+    lastXPGain,
+    levelUp,
+    dismissLevelUp,
   };
 }

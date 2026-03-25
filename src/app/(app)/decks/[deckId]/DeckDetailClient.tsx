@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import DirectionPicker from '@/components/DirectionPicker';
+import ModePicker from '@/components/ModePicker';
 import type { Deck, Card } from '@/lib/types';
-import type { Direction } from '@/lib/constants';
+import type { Direction, ReviewMode } from '@/lib/constants';
 
 interface DeckDetailClientProps {
   deck: Deck;
@@ -14,6 +15,7 @@ interface DeckDetailClientProps {
 
 export default function DeckDetailClient({ deck, cards, dueCount }: DeckDetailClientProps) {
   const [direction, setDirection] = useState<Direction>('PL->NL');
+  const [mode, setMode] = useState<ReviewMode>('flip');
 
   return (
     <div className="space-y-5">
@@ -51,9 +53,15 @@ export default function DeckDetailClient({ deck, cards, dueCount }: DeckDetailCl
         <DirectionPicker value={direction} onChange={setDirection} />
       </div>
 
+      {/* Review mode */}
+      <div>
+        <h2 className="text-sm font-medium text-trail-500 mb-2">Review mode</h2>
+        <ModePicker value={mode} onChange={setMode} />
+      </div>
+
       {/* Start Review */}
       <Link
-        href={`/review/${deck.id}?direction=${direction}`}
+        href={`/review/${deck.id}?direction=${direction}${mode === 'type' ? '&mode=type' : ''}`}
         className="block bg-forest-500 hover:bg-forest-600 text-white text-center py-4 rounded-2xl font-bold text-lg transition-colors"
       >
         🐼 Start Review

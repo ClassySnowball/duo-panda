@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import StreakDisplay from '@/components/StreakDisplay';
 import StatsChart from '@/components/StatsChart';
+import XPProgressBar from '@/components/XPProgressBar';
+import { getLevelInfo } from '@/lib/xp';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +50,16 @@ export default async function ProgressPage() {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
+  // XP
+  const { data: userXP } = await supabase
+    .from('user_xp')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  const totalXP = userXP?.total_xp ?? 0;
+  const levelInfo = getLevelInfo(totalXP);
+
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold text-trail-700">Progress</h1>
@@ -75,6 +87,9 @@ export default async function ProgressPage() {
           <div className="text-sm text-trail-400">Cards learned</div>
         </div>
       </div>
+
+      {/* XP & Level */}
+      <XPProgressBar levelInfo={levelInfo} totalXP={totalXP} />
     </div>
   );
 }

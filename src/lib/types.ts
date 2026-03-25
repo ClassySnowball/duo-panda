@@ -4,6 +4,7 @@ export interface Profile {
   daily_goal_reviews: number;
   daily_goal_new_words: number;
   preferred_direction: string;
+  preferred_review_mode: string;
   created_at: string;
 }
 
@@ -85,4 +86,12 @@ export interface DailyStats {
 export interface ReviewCard extends Card {
   progress?: UserCardProgress;
   isNew: boolean;
+}
+
+export interface UserXP {
+  id: string;
+  user_id: string;
+  total_xp: number;
+  current_level: number;
+  updated_at: string;
 }

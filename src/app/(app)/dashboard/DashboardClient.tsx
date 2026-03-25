@@ -6,6 +6,8 @@ import StreakDisplay from '@/components/StreakDisplay';
 import DailyGoalRing from '@/components/DailyGoalRing';
 import DirectionPicker from '@/components/DirectionPicker';
 import DeckCard from '@/components/DeckCard';
+import XPProgressBar from '@/components/XPProgressBar';
+import { getLevelInfo } from '@/lib/xp';
 import type { Direction } from '@/lib/constants';
 import type { Deck } from '@/lib/types';
 
@@ -18,6 +20,7 @@ interface DashboardClientProps {
   dailyGoalReviews: number;
   dailyGoalNewWords: number;
   preferredDirection: string;
+  totalXP: number;
   decks: Deck[];
 }
 
@@ -30,9 +33,11 @@ export default function DashboardClient({
   dailyGoalReviews,
   dailyGoalNewWords,
   preferredDirection,
+  totalXP,
   decks,
 }: DashboardClientProps) {
   const [direction, setDirection] = useState<Direction>(preferredDirection as Direction);
+  const levelInfo = getLevelInfo(totalXP);
 
   return (
     <div className="space-y-6">
@@ -61,6 +66,9 @@ export default function DashboardClient({
           />
         </div>
       </div>
+
+      {/* XP & Level */}
+      <XPProgressBar levelInfo={levelInfo} totalXP={totalXP} />
 
       {/* Direction Picker */}
       <div>

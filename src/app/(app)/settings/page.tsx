@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import DirectionPicker from '@/components/DirectionPicker';
+import ModePicker from '@/components/ModePicker';
 import NotificationToggle from '@/components/NotificationToggle';
-import type { Direction } from '@/lib/constants';
+import type { Direction, ReviewMode } from '@/lib/constants';
 
 export default function SettingsPage() {
   const [dailyGoalReviews, setDailyGoalReviews] = useState(20);
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const [preferredDirection, setPreferredDirection] = useState<Direction>('PL->NL');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [preferredReviewMode, setPreferredReviewMode] = useState<ReviewMode>('flip');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -36,6 +38,9 @@ export default function SettingsPage() {
         setDailyGoalNewWords(profile.daily_goal_new_words);
         setPreferredDirection(profile.preferred_direction as Direction);
         setDisplayName(profile.display_name || '');
+        if (profile.preferred_review_mode === 'type') {
+          setPreferredReviewMode('type');
+        }
       }
     }
     load();
@@ -51,6 +56,7 @@ export default function SettingsPage() {
       daily_goal_reviews: dailyGoalReviews,
       daily_goal_new_words: dailyGoalNewWords,
       preferred_direction: preferredDirection,
+      preferred_review_mode: preferredReviewMode,
       display_name: displayName,
     }).eq('id', user.id);
 
@@ -124,6 +130,12 @@ export default function SettingsPage() {
       <div className="bg-white rounded-2xl border border-trail-200 p-5 space-y-3">
         <h2 className="text-sm font-medium text-trail-500">Default Direction</h2>
         <DirectionPicker value={preferredDirection} onChange={setPreferredDirection} />
+      </div>
+
+      {/* Default Review Mode */}
+      <div className="bg-white rounded-2xl border border-trail-200 p-5 space-y-3">
+        <h2 className="text-sm font-medium text-trail-500">Default Review Mode</h2>
+        <ModePicker value={preferredReviewMode} onChange={setPreferredReviewMode} />
       </div>
 
       {/* Notifications */}

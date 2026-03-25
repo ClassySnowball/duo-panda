@@ -25,5 +25,39 @@ export const QUALITY_LABELS = [
   { quality: 5, label: 'Easy', color: 'bg-forest-600 hover:bg-forest-700', description: 'Easy!' },
 ] as const;
 
+export const REVIEW_MODES = [
+  { value: 'flip' as const, label: 'Flip', description: 'Flip cards to reveal' },
+  { value: 'type' as const, label: 'Type', description: 'Type your answer' },
+] as const;
+
+export type ReviewMode = 'flip' | 'type';
+
 export const DEFAULT_DAILY_GOAL_REVIEWS = 20;
 export const DEFAULT_DAILY_GOAL_NEW_WORDS = 5;
+
+// XP System
+export const XP_PER_QUALITY: Record<number, number> = {
+  1: 0,   // Again
+  2: 5,   // Hard
+  4: 10,  // Good
+  5: 15,  // Easy
+};
+
+export const NEW_CARD_BONUS = 5;
+export const DAILY_GOAL_BONUS = 25;
+
+export const LEVELS = [
+  { level: 1,  name: 'Chihuahua',      emoji: '🐕', xpRequired: 0 },
+  { level: 2,  name: 'Toy Poodle',     emoji: '🐩', xpRequired: 100 },
+  { level: 3,  name: 'Dachshund',      emoji: '🐕', xpRequired: 250 },
+  { level: 4,  name: 'Maltipoo',       emoji: '🐩', xpRequired: 450 },
+  { level: 5,  name: 'Corgi',          emoji: '🐕', xpRequired: 700 },
+  { level: 6,  name: 'Beagle',         emoji: '🐕', xpRequired: 1000 },
+  { level: 7,  name: 'Labradoodle',    emoji: '🐩', xpRequired: 1400 },
+  { level: 8,  name: 'Border Collie',  emoji: '🐕', xpRequired: 1900 },
+  { level: 9,  name: 'Labrador',       emoji: '🐕', xpRequired: 2500 },
+  { level: 10, name: 'Great Dane',     emoji: '🐕', xpRequired: 3200 },
+  { level: 11, name: 'Red Panda Cub',  emoji: '🐾', xpRequired: 4100 },
+  { level: 12, name: 'Red Panda',      emoji: '🐼', xpRequired: 5200 },
+  { level: 13, name: 'Giant Red Panda', emoji: '🐼', xpRequired: 6500 },
+] as const;

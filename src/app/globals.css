@@ -69,3 +69,44 @@ body {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Typing mode feedback animations */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.answer-wrong {
+  animation: shake 0.3s ease-out;
+}
+
+@keyframes correctPulse {
+  0% { box-shadow: 0 0 0 0 rgba(74, 124, 89, 0.4); }
+  100% { box-shadow: 0 0 0 12px rgba(74, 124, 89, 0); }
+}
+
+.answer-correct {
+  animation: correctPulse 0.5s ease-out;
+}
+
+/* XP toast animation */
+@keyframes xpToast {
+  0% { opacity: 0; transform: translateY(0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-16px); }
+}
+
+.animate-xp-toast {
+  animation: xpToast 1s ease-out forwards;
+}
+
+/* Fade in for modals */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeInOverlay 0.2s ease-out;
+}

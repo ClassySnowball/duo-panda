@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
+const AUTO_PASSWORD = 'duo-panda-2026!';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -17,18 +18,42 @@ export default function LoginPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+
+    // Try signing in first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
-      password,
+      password: AUTO_PASSWORD,
     });
 
-    setLoading(false);
-
-    if (error) {
-      setError(error.message);
-    } else {
+    if (!signInError) {
       router.push('/dashboard');
+      return;
     }
+
+    // If user doesn't exist, sign up automatically
+    if (signInError.message.includes('Invalid login credentials')) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: AUTO_PASSWORD,
+        options: {
+          data: {
+            display_name: email.split('@')[0],
+          },
+        },
+      });
+
+      setLoading(false);
+
+      if (signUpError) {
+        setError(signUpError.message);
+      } else {
+        router.push('/dashboard');
+      }
+      return;
+    }
+
+    setLoading(false);
+    setError(signInError.message);
   };
 
   return (
@@ -54,18 +79,6 @@ export default function LoginPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-trail-600 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
           {error && (
             <p className="text-sm text-rust-500">{error}</p>
           )}
@@ -75,7 +88,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-forest-500 hover:bg-forest-600 text-white py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Signing in...' : 'Continue'}
           </button>
         </form>
       </div>
