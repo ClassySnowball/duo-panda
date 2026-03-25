@@ -6,9 +6,10 @@ import StreakDisplay from '@/components/StreakDisplay';
 import DailyGoalRing from '@/components/DailyGoalRing';
 import DirectionPicker from '@/components/DirectionPicker';
 import DeckCard from '@/components/DeckCard';
+import ModePicker from '@/components/ModePicker';
 import XPProgressBar from '@/components/XPProgressBar';
 import { getLevelInfo } from '@/lib/xp';
-import type { Direction } from '@/lib/constants';
+import type { Direction, ReviewMode } from '@/lib/constants';
 import type { Deck } from '@/lib/types';
 
 interface DashboardClientProps {
@@ -39,6 +40,7 @@ export default function DashboardClient({
   decks,
 }: DashboardClientProps) {
   const [direction, setDirection] = useState<Direction>(preferredDirection as Direction);
+  const [mode, setMode] = useState<ReviewMode>(preferredReviewMode as ReviewMode);
   const levelInfo = getLevelInfo(totalXP);
 
   return (
@@ -78,10 +80,16 @@ export default function DashboardClient({
         <DirectionPicker value={direction} onChange={setDirection} compact />
       </div>
 
+      {/* Review Mode */}
+      <div>
+        <h2 className="text-sm font-medium text-trail-500 mb-2">Review mode</h2>
+        <ModePicker value={mode} onChange={setMode} />
+      </div>
+
       {/* Quick Start */}
       {decks.length > 0 && (
         <Link
-          href={`/review/${decks[0].id}?direction=${direction}${preferredReviewMode === 'type' ? '&mode=type' : ''}`}
+          href={`/review/${decks[0].id}?direction=${direction}${mode === 'type' ? '&mode=type' : ''}`}
           className="block bg-forest-500 hover:bg-forest-600 text-white text-center py-4 rounded-2xl font-bold text-lg transition-colors shadow-sm"
         >
           🐼 Start Learning

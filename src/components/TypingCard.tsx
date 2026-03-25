@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { deriveQuality, MATCH_LABELS, type QualityResult } from '@/lib/levenshtein';
 import { QUALITY_LABELS } from '@/lib/constants';
+import SpeakerButton from './SpeakerButton';
 
 interface TypingCardProps {
   front: string;
@@ -64,15 +65,21 @@ export default function TypingCard({ front, correctAnswer, fromLang, toLang, onR
         <span className={`text-xs uppercase tracking-wide mb-3 ${
           result ? 'text-forest-300' : 'text-trail-400'
         }`}>{fromLang}</span>
-        <p className={`text-2xl font-bold text-center leading-relaxed ${
-          result ? 'text-white' : 'text-trail-700'
-        }`}>{front}</p>
+        <div className="flex items-center gap-2">
+          <p className={`text-2xl font-bold text-center leading-relaxed ${
+            result ? 'text-white' : 'text-trail-700'
+          }`}>{front}</p>
+          <SpeakerButton text={front} lang={fromLang} variant={result ? 'dark' : 'light'} />
+        </div>
 
         {result && (
           <>
             <div className="w-12 border-t border-forest-400 my-3" />
             <span className="text-xs uppercase tracking-wide text-forest-300 mb-2">{toLang}</span>
-            <p className="text-xl font-bold text-white text-center">{correctAnswer}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xl font-bold text-white text-center">{correctAnswer}</p>
+              <SpeakerButton text={correctAnswer} lang={toLang} variant="dark" />
+            </div>
           </>
         )}
       </div>
