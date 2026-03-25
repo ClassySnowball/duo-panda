@@ -24,6 +24,13 @@ export default async function DeckDetailPage({ params }: { params: Promise<{ dec
     .eq('deck_id', deckId)
     .order('created_at');
 
+  // Fetch profile for preferred review mode
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('preferred_review_mode')
+    .eq('id', user.id)
+    .single();
+
   // Count due cards
   const { count: dueCount } = await supabase
     .from('user_card_progress')
@@ -36,6 +43,7 @@ export default async function DeckDetailPage({ params }: { params: Promise<{ dec
       deck={deck}
       cards={cards ?? []}
       dueCount={dueCount ?? 0}
+      preferredReviewMode={profile?.preferred_review_mode ?? 'flip'}
     />
   );
 }

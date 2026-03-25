@@ -20,6 +20,7 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit, mod
   const {
     currentCard,
     isFlipped,
+    hasRevealed,
     isLoading,
     isComplete,
     isTransitioning,
@@ -140,7 +141,7 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit, mod
               onFlip={flip}
             />
 
-            {isFlipped ? (
+            {hasRevealed ? (
               <QualityRating onRate={handleRate} />
             ) : (
               <button

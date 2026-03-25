@@ -20,6 +20,7 @@ interface DashboardClientProps {
   dailyGoalReviews: number;
   dailyGoalNewWords: number;
   preferredDirection: string;
+  preferredReviewMode: string;
   totalXP: number;
   decks: Deck[];
 }
@@ -33,6 +34,7 @@ export default function DashboardClient({
   dailyGoalReviews,
   dailyGoalNewWords,
   preferredDirection,
+  preferredReviewMode,
   totalXP,
   decks,
 }: DashboardClientProps) {
@@ -79,7 +81,7 @@ export default function DashboardClient({
       {/* Quick Start */}
       {decks.length > 0 && (
         <Link
-          href={`/review/${decks[0].id}?direction=${direction}`}
+          href={`/review/${decks[0].id}?direction=${direction}${preferredReviewMode === 'type' ? '&mode=type' : ''}`}
           className="block bg-forest-500 hover:bg-forest-600 text-white text-center py-4 rounded-2xl font-bold text-lg transition-colors shadow-sm"
         >
           🐼 Start Learning

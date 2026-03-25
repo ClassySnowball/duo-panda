@@ -25,6 +25,7 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
   const [cards, setCards] = useState<ReviewCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [hasRevealed, setHasRevealed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isComplete, setIsComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -256,6 +257,7 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
 
     // Move to next — delay so flip animation resets before showing new card
     setIsFlipped(false);
+    setHasRevealed(false);
     if (currentIndex + 1 >= cards.length && quality >= 3) {
       setIsComplete(true);
     } else {
@@ -268,7 +270,8 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
   }, [currentCard, currentIndex, cards.length, direction, supabase]);
 
   const flip = useCallback(() => {
-    setIsFlipped(true);
+    setIsFlipped(f => !f);
+    setHasRevealed(true);
   }, []);
 
   const dismissLevelUp = useCallback(() => setLevelUp(null), []);
@@ -276,6 +279,7 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
   return {
     currentCard,
     isFlipped,
+    hasRevealed,
     isLoading,
     isComplete,
     isTransitioning,

@@ -11,11 +11,12 @@ interface DeckDetailClientProps {
   deck: Deck;
   cards: Card[];
   dueCount: number;
+  preferredReviewMode: string;
 }
 
-export default function DeckDetailClient({ deck, cards, dueCount }: DeckDetailClientProps) {
+export default function DeckDetailClient({ deck, cards, dueCount, preferredReviewMode }: DeckDetailClientProps) {
   const [direction, setDirection] = useState<Direction>('PL->NL');
-  const [mode, setMode] = useState<ReviewMode>('flip');
+  const [mode, setMode] = useState<ReviewMode>(preferredReviewMode as ReviewMode);
 
   return (
     <div className="space-y-5">

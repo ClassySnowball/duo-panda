@@ -60,6 +60,7 @@ export default async function DashboardPage() {
       dailyGoalReviews={profile?.daily_goal_reviews ?? 20}
       dailyGoalNewWords={profile?.daily_goal_new_words ?? 5}
       preferredDirection={profile?.preferred_direction ?? 'PL->NL'}
+      preferredReviewMode={profile?.preferred_review_mode ?? 'flip'}
       totalXP={userXP?.total_xp ?? 0}
       decks={decks ?? []}
     />
