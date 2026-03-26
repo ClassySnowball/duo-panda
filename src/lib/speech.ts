@@ -1,6 +1,6 @@
 const LANG_CODE_MAP: Record<string, string> = {
   Polish: 'pl-PL',
-  Dutch: 'nl-NL',
+  Dutch: 'nl-BE',
   English: 'en-US',
 };
 
