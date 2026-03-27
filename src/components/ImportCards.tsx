@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { getDeckDisplayName } from '@/lib/deck-utils';
 import type { Deck } from '@/lib/types';
 
 interface ImportCardsProps {
   decks: Deck[];
   userId: string;
+  preferredDirection?: string;
 }
 
 interface ParsedCard {
@@ -87,13 +89,15 @@ function parseCsv(text: string): ParsedCard[] {
   });
 }
 
-export default function ImportCards({ decks, userId }: ImportCardsProps) {
+export default function ImportCards({ decks, userId, preferredDirection }: ImportCardsProps) {
   const [tab, setTab] = useState<'paste' | 'csv'>('paste');
   const [pasteText, setPasteText] = useState('');
   const [csvText, setCsvText] = useState('');
   const [cardType, setCardType] = useState('word');
   const [deckId, setDeckId] = useState(decks[0]?.id || '__new__');
-  const [newDeckName, setNewDeckName] = useState('');
+  const [newDeckNameNl, setNewDeckNameNl] = useState('');
+  const [newDeckNamePl, setNewDeckNamePl] = useState('');
+  const [newDeckNameEn, setNewDeckNameEn] = useState('');
   const [preview, setPreview] = useState<ParsedCard[] | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ success: number; errors: number } | null>(null);
@@ -128,12 +132,15 @@ export default function ImportCards({ decks, userId }: ImportCardsProps) {
     let targetDeckId = deckId;
 
     if (deckId === '__new__') {
-      if (!newDeckName.trim()) {
+      if (!newDeckNameNl.trim() || !newDeckNamePl.trim() || !newDeckNameEn.trim()) {
         setImporting(false);
         return;
       }
       const { data: newDeck, error } = await supabase.from('decks').insert({
-        name: newDeckName.trim(),
+        name: newDeckNameEn.trim(),
+        name_nl: newDeckNameNl.trim(),
+        name_pl: newDeckNamePl.trim(),
+        name_en: newDeckNameEn.trim(),
         user_id: userId,
         card_type: cardType,
       }).select('id').single();
@@ -254,20 +261,37 @@ export default function ImportCards({ decks, userId }: ImportCardsProps) {
           <option value="__new__">+ Create new deck</option>
           {decks.map((deck) => (
             <option key={deck.id} value={deck.id}>
-              {deck.name}
+              {getDeckDisplayName(deck, preferredDirection)}
             </option>
           ))}
         </select>
       </div>
 
       {deckId === '__new__' && (
-        <input
-          type="text"
-          value={newDeckName}
-          onChange={(e) => setNewDeckName(e.target.value)}
-          className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
-          placeholder="New deck name"
-        />
+        <div className="space-y-3 bg-trail-50 rounded-xl p-4">
+          <p className="text-sm font-medium text-trail-600">New deck name</p>
+          <input
+            type="text"
+            value={newDeckNameNl}
+            onChange={(e) => setNewDeckNameNl(e.target.value)}
+            className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
+            placeholder="Dutch name 🇳🇱"
+          />
+          <input
+            type="text"
+            value={newDeckNamePl}
+            onChange={(e) => setNewDeckNamePl(e.target.value)}
+            className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
+            placeholder="Polish name 🇵🇱"
+          />
+          <input
+            type="text"
+            value={newDeckNameEn}
+            onChange={(e) => setNewDeckNameEn(e.target.value)}
+            className="w-full bg-white border border-trail-200 rounded-xl px-4 py-3 text-trail-700 placeholder:text-trail-300 focus:ring-2 focus:ring-forest-400 focus:outline-none"
+            placeholder="English name 🇬🇧"
+          />
+        </div>
       )}
 
       {/* Preview button */}
@@ -324,7 +348,7 @@ export default function ImportCards({ decks, userId }: ImportCardsProps) {
             </button>
             <button
               onClick={handleImport}
-              disabled={importing || preview.filter(c => !c.error).length === 0 || (deckId === '__new__' && !newDeckName.trim())}
+              disabled={importing || preview.filter(c => !c.error).length === 0 || (deckId === '__new__' && (!newDeckNameNl.trim() || !newDeckNamePl.trim() || !newDeckNameEn.trim()))}
               className="flex-1 bg-forest-500 hover:bg-forest-600 text-white py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
             >
               {importing ? 'Importing...' : `Import ${preview.filter(c => !c.error).length} cards`}

@@ -9,9 +9,10 @@ import type { Category, Deck } from '@/lib/types';
 interface DecksClientProps {
   categories: Category[];
   decks: Deck[];
+  preferredDirection?: string;
 }
 
-export default function DecksClient({ categories, decks }: DecksClientProps) {
+export default function DecksClient({ categories, decks, preferredDirection }: DecksClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filteredDecks = selectedCategory
@@ -39,7 +40,7 @@ export default function DecksClient({ categories, decks }: DecksClientProps) {
       {filteredDecks.length > 0 ? (
         <div className="grid grid-cols-2 gap-3">
           {filteredDecks.map((deck) => (
-            <DeckCard key={deck.id} deck={deck} category={deck.category} />
+            <DeckCard key={deck.id} deck={deck} category={deck.category} preferredDirection={preferredDirection} />
           ))}
         </div>
       ) : (

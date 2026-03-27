@@ -9,21 +9,17 @@ export default async function DecksPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name');
-
-  const { data: decks } = await supabase
-    .from('decks')
-    .select('*, category:categories(*)')
-    .or(`user_id.eq.${user.id},is_public.eq.true`)
-    .order('name');
+  const [{ data: categories }, { data: decks }, { data: profile }] = await Promise.all([
+    supabase.from('categories').select('*').order('name'),
+    supabase.from('decks').select('*, category:categories(*)').or(`user_id.eq.${user.id},is_public.eq.true`).order('name'),
+    supabase.from('profiles').select('preferred_direction').eq('id', user.id).single(),
+  ]);
 
   return (
     <DecksClient
       categories={categories ?? []}
       decks={decks ?? []}
+      preferredDirection={profile?.preferred_direction}
     />
   );
 }

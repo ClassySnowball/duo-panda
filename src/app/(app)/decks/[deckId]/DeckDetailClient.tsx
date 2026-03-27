@@ -5,6 +5,7 @@ import Link from 'next/link';
 import DirectionPicker from '@/components/DirectionPicker';
 import ModePicker from '@/components/ModePicker';
 import { prefetchCards } from '@/lib/card-prefetch';
+import { getDeckDisplayName } from '@/lib/deck-utils';
 import type { Deck, Card } from '@/lib/types';
 import type { Direction, ReviewMode } from '@/lib/constants';
 
@@ -13,9 +14,10 @@ interface DeckDetailClientProps {
   cards: Card[];
   dueCount: number;
   preferredReviewMode: string;
+  preferredDirection?: string;
 }
 
-export default function DeckDetailClient({ deck, cards, dueCount, preferredReviewMode }: DeckDetailClientProps) {
+export default function DeckDetailClient({ deck, cards, dueCount, preferredReviewMode, preferredDirection }: DeckDetailClientProps) {
   const [direction, setDirection] = useState<Direction>('PL->NL');
   const [mode, setMode] = useState<ReviewMode>(preferredReviewMode as ReviewMode);
 
@@ -35,7 +37,7 @@ export default function DeckDetailClient({ deck, cards, dueCount, preferredRevie
       <div>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-2xl">{deck.category?.icon || '📚'}</span>
-          <h1 className="text-xl font-bold text-trail-700">{deck.name}</h1>
+          <h1 className="text-xl font-bold text-trail-700">{getDeckDisplayName(deck, preferredDirection)}</h1>
         </div>
         {deck.description && (
           <p className="text-sm text-trail-500">{deck.description}</p>

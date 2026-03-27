@@ -27,7 +27,7 @@ export default async function DeckDetailPage({ params }: { params: Promise<{ dec
   // Fetch profile for preferred review mode
   const { data: profile } = await supabase
     .from('profiles')
-    .select('preferred_review_mode')
+    .select('preferred_review_mode, preferred_direction')
     .eq('id', user.id)
     .single();
 
@@ -44,6 +44,7 @@ export default async function DeckDetailPage({ params }: { params: Promise<{ dec
       cards={cards ?? []}
       dueCount={dueCount ?? 0}
       preferredReviewMode={profile?.preferred_review_mode ?? 'flip'}
+      preferredDirection={profile?.preferred_direction}
     />
   );
 }

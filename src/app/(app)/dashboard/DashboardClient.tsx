@@ -115,7 +115,7 @@ export default function DashboardClient({
           </div>
           <div className="grid grid-cols-2 gap-3">
             {decks.slice(0, 4).map((deck) => (
-              <DeckCard key={deck.id} deck={deck} category={deck.category} />
+              <DeckCard key={deck.id} deck={deck} category={deck.category} preferredDirection={preferredDirection} />
             ))}
           </div>
         </div>

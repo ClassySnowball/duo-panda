@@ -10,11 +10,18 @@ export default async function ImportPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: decks } = await supabase
-    .from('decks')
-    .select('*')
-    .or(`user_id.eq.${user.id},is_public.eq.true`)
-    .order('name');
+  const [{ data: decks }, { data: profile }] = await Promise.all([
+    supabase
+      .from('decks')
+      .select('*')
+      .or(`user_id.eq.${user.id},is_public.eq.true`)
+      .order('name'),
+    supabase
+      .from('profiles')
+      .select('preferred_direction')
+      .eq('id', user.id)
+      .single(),
+  ]);
 
   return (
     <div className="space-y-4">
@@ -24,7 +31,7 @@ export default async function ImportPage() {
           Add single card
         </Link>
       </div>
-      <ImportCards decks={decks ?? []} userId={user.id} />
+      <ImportCards decks={decks ?? []} userId={user.id} preferredDirection={profile?.preferred_direction} />
     </div>
   );
 }

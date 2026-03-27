@@ -1,13 +1,15 @@
 import Link from 'next/link';
+import { getDeckDisplayName } from '@/lib/deck-utils';
 import type { Deck, Category } from '@/lib/types';
 
 interface DeckCardProps {
   deck: Deck;
   category?: Category;
   dueCount?: number;
+  preferredDirection?: string;
 }
 
-export default function DeckCard({ deck, category, dueCount }: DeckCardProps) {
+export default function DeckCard({ deck, category, dueCount, preferredDirection }: DeckCardProps) {
   return (
     <Link
       href={`/decks/${deck.id}`}
@@ -21,7 +23,7 @@ export default function DeckCard({ deck, category, dueCount }: DeckCardProps) {
           </span>
         )}
       </div>
-      <h3 className="font-bold text-trail-700 mb-1">{deck.name}</h3>
+      <h3 className="font-bold text-trail-700 mb-1">{getDeckDisplayName(deck, preferredDirection)}</h3>
       {category && (
         <span className="text-xs text-trail-400">{category.name}</span>
       )}

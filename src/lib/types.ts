@@ -22,6 +22,9 @@ export interface Deck {
   category_id: string | null;
   user_id: string | null;
   name: string;
+  name_nl?: string | null;
+  name_pl?: string | null;
+  name_en?: string | null;
   description: string | null;
   is_public: boolean;
   card_type: string;
