@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DirectionPicker from '@/components/DirectionPicker';
 import ModePicker from '@/components/ModePicker';
+import { prefetchCards } from '@/lib/card-prefetch';
 import type { Deck, Card } from '@/lib/types';
 import type { Direction, ReviewMode } from '@/lib/constants';
 
@@ -17,6 +18,11 @@ interface DeckDetailClientProps {
 export default function DeckDetailClient({ deck, cards, dueCount, preferredReviewMode }: DeckDetailClientProps) {
   const [direction, setDirection] = useState<Direction>('PL->NL');
   const [mode, setMode] = useState<ReviewMode>(preferredReviewMode as ReviewMode);
+
+  // Prefetch cards so review starts instantly
+  useEffect(() => {
+    prefetchCards(deck.id, direction);
+  }, [deck.id, direction]);
 
   return (
     <div className="space-y-5">

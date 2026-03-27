@@ -120,7 +120,7 @@ export default function FlashcardSession({ deckId, direction, newCardsLimit, mod
       </div>
 
       {/* Card area */}
-      <div className={`flex-1 flex flex-col items-center justify-center px-6 py-8 gap-8 ${mode === 'flip' ? `transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'}` : ''}`}>
+      <div className={`flex-1 flex flex-col items-center justify-center px-6 py-8 gap-8 ${mode === 'flip' ? `transition-opacity duration-100 ${isTransitioning ? 'opacity-0' : 'opacity-100'}` : ''}`}>
         {mode === 'type' ? (
           <TypingCard
             front={currentCard[fromKey]!}

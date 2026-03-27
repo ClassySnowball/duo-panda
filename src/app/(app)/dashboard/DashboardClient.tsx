@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import StreakDisplay from '@/components/StreakDisplay';
 import DailyGoalRing from '@/components/DailyGoalRing';
@@ -9,6 +9,7 @@ import DeckCard from '@/components/DeckCard';
 import ModePicker from '@/components/ModePicker';
 import XPProgressBar from '@/components/XPProgressBar';
 import { getLevelInfo } from '@/lib/xp';
+import { prefetchCards } from '@/lib/card-prefetch';
 import type { Direction, ReviewMode } from '@/lib/constants';
 import type { Deck } from '@/lib/types';
 
@@ -42,6 +43,13 @@ export default function DashboardClient({
   const [direction, setDirection] = useState<Direction>(preferredDirection as Direction);
   const [mode, setMode] = useState<ReviewMode>(preferredReviewMode as ReviewMode);
   const levelInfo = getLevelInfo(totalXP);
+
+  // Prefetch cards so review starts instantly
+  useEffect(() => {
+    if (decks.length > 0) {
+      prefetchCards(decks[0].id, direction);
+    }
+  }, [decks, direction]);
 
   return (
     <div className="space-y-6">

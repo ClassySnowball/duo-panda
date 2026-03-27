@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { sm2 } from '@/lib/sm2';
 import { DIRECTIONS } from '@/lib/constants';
 import { calculateXPForReview, getLevelInfo } from '@/lib/xp';
+import { consumePrefetchedCards } from '@/lib/card-prefetch';
 import type { LevelInfo } from '@/lib/xp';
 import type { ReviewCard, Card, UserCardProgress } from '@/lib/types';
 
@@ -30,6 +31,7 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
   const [isComplete, setIsComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [stats, setStats] = useState<SessionStats>({ reviewed: 0, newLearned: 0, correct: 0, total: 0 });
+  const reviewedCardIds = useRef<Set<string>>(new Set());
   const [sessionXP, setSessionXP] = useState(0);
   const [lastXPGain, setLastXPGain] = useState(0);
   const [levelUp, setLevelUp] = useState<LevelInfo | null>(null);
@@ -40,28 +42,46 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
   const loadCards = useCallback(async () => {
     setIsLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    // Check for prefetched data first
+    const prefetched = consumePrefetchedCards(deckId, direction);
 
-    // Get all cards in the deck
-    const { data: deckCards } = await supabase
-      .from('cards')
-      .select('*')
-      .eq('deck_id', deckId);
+    let deckCards: Card[] | null;
+    let progressData: UserCardProgress[] | null;
+
+    if (prefetched) {
+      deckCards = prefetched.cards;
+      progressData = prefetched.progress;
+    } else {
+      // Fallback: fetch from DB
+      const [{ data: { user } }, { data: fetchedCards }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from('cards').select('*').eq('deck_id', deckId),
+      ]);
+
+      if (!user) return;
+      deckCards = fetchedCards;
+
+      if (!deckCards?.length) {
+        setIsLoading(false);
+        setIsComplete(true);
+        return;
+      }
+
+      const { data: fetchedProgress } = await supabase
+        .from('user_card_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('direction', direction)
+        .in('card_id', deckCards.map(c => c.id));
+
+      progressData = fetchedProgress;
+    }
 
     if (!deckCards?.length) {
       setIsLoading(false);
       setIsComplete(true);
       return;
     }
-
-    // Get user progress for these cards in this direction
-    const { data: progressData } = await supabase
-      .from('user_card_progress')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('direction', direction)
-      .in('card_id', deckCards.map(c => c.id));
 
     const progressMap = new Map<string, UserCardProgress>();
     progressData?.forEach(p => progressMap.set(p.card_id, p));
@@ -152,7 +172,10 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
       quality,
     });
 
-    // Update daily stats
+    // Update daily stats (only count each unique card once)
+    const isFirstReview = !reviewedCardIds.current.has(currentCard.id);
+    reviewedCardIds.current.add(currentCard.id);
+
     const today = new Date().toISOString().split('T')[0];
     const { data: existingStats } = await supabase
       .from('daily_stats')
@@ -163,14 +186,14 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
 
     if (existingStats) {
       await supabase.from('daily_stats').update({
-        cards_reviewed: existingStats.cards_reviewed + 1,
+        cards_reviewed: existingStats.cards_reviewed + (isFirstReview ? 1 : 0),
         new_cards_learned: existingStats.new_cards_learned + (currentCard.isNew ? 1 : 0),
       }).eq('id', existingStats.id);
     } else {
       await supabase.from('daily_stats').insert({
         user_id: user.id,
         date: today,
-        cards_reviewed: 1,
+        cards_reviewed: isFirstReview ? 1 : 0,
         new_cards_learned: currentCard.isNew ? 1 : 0,
       });
     }
@@ -242,10 +265,10 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
       }
     }
 
-    // Update session stats
+    // Update session stats (only count unique cards)
     setStats(s => ({
       ...s,
-      reviewed: s.reviewed + 1,
+      reviewed: s.reviewed + (isFirstReview ? 1 : 0),
       newLearned: s.newLearned + (currentCard.isNew ? 1 : 0),
       correct: s.correct + (quality >= 3 ? 1 : 0),
     }));
@@ -265,7 +288,7 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
       setTimeout(() => {
         setCurrentIndex(i => i + 1);
         setIsTransitioning(false);
-      }, 300);
+      }, 120);
     }
   }, [currentCard, currentIndex, cards.length, direction, supabase]);
 
