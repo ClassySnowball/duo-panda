@@ -139,133 +139,14 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
   const handleRate = useCallback(async (quality: number) => {
     if (!currentCard) return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const progress = currentCard.progress;
-    const result = sm2({
-      quality,
-      easeFactor: progress?.ease_factor ?? 2.5,
-      interval: progress?.interval_days ?? 0,
-      repetitions: progress?.repetitions ?? 0,
-    });
-
-    // Upsert progress
-    await supabase.from('user_card_progress').upsert({
-      user_id: user.id,
-      card_id: currentCard.id,
-      direction,
-      ease_factor: result.easeFactor,
-      interval_days: result.interval,
-      repetitions: result.repetitions,
-      next_review_at: result.nextReviewAt.toISOString(),
-      last_reviewed_at: new Date().toISOString(),
-    }, {
-      onConflict: 'user_id,card_id,direction',
-    });
-
-    // Log the review
-    await supabase.from('review_log').insert({
-      user_id: user.id,
-      card_id: currentCard.id,
-      direction,
-      quality,
-    });
-
-    // Update daily stats (only count each unique card once)
+    // Track unique reviews synchronously
     const isFirstReview = !reviewedCardIds.current.has(currentCard.id);
     reviewedCardIds.current.add(currentCard.id);
 
-    const today = new Date().toISOString().split('T')[0];
-    const { data: existingStats } = await supabase
-      .from('daily_stats')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('date', today)
-      .single();
-
-    if (existingStats) {
-      await supabase.from('daily_stats').update({
-        cards_reviewed: existingStats.cards_reviewed + (isFirstReview ? 1 : 0),
-        new_cards_learned: existingStats.new_cards_learned + (currentCard.isNew ? 1 : 0),
-      }).eq('id', existingStats.id);
-    } else {
-      await supabase.from('daily_stats').insert({
-        user_id: user.id,
-        date: today,
-        cards_reviewed: isFirstReview ? 1 : 0,
-        new_cards_learned: currentCard.isNew ? 1 : 0,
-      });
-    }
-
-    // Update streak
-    const { data: streak } = await supabase
-      .from('user_streaks')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (streak) {
-      const lastDate = streak.last_review_date;
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-      let newStreak = streak.current_streak;
-      if (lastDate === today) {
-        // Already reviewed today, no change
-      } else if (lastDate === yesterdayStr) {
-        newStreak += 1;
-      } else {
-        newStreak = 1;
-      }
-
-      await supabase.from('user_streaks').update({
-        current_streak: newStreak,
-        longest_streak: Math.max(newStreak, streak.longest_streak),
-        last_review_date: today,
-      }).eq('id', streak.id);
-    } else {
-      await supabase.from('user_streaks').insert({
-        user_id: user.id,
-        current_streak: 1,
-        longest_streak: 1,
-        last_review_date: today,
-      });
-    }
-
-    // Update XP
+    // Compute XP synchronously
     const xpEarned = calculateXPForReview(quality, currentCard.isNew);
-    if (xpEarned > 0) {
-      const { data: currentXP } = await supabase
-        .from('user_xp')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
 
-      const oldTotal = currentXP?.total_xp ?? 0;
-      const newTotal = oldTotal + xpEarned;
-      const oldLevelInfo = getLevelInfo(oldTotal);
-      const newLevelInfo = getLevelInfo(newTotal);
-
-      await supabase.from('user_xp').upsert({
-        user_id: user.id,
-        total_xp: newTotal,
-        current_level: newLevelInfo.level,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id',
-      });
-
-      setSessionXP(prev => prev + xpEarned);
-      setLastXPGain(xpEarned);
-
-      if (newLevelInfo.level > oldLevelInfo.level) {
-        setLevelUp(newLevelInfo);
-      }
-    }
-
-    // Update session stats (only count unique cards)
+    // --- Update UI immediately ---
     setStats(s => ({
       ...s,
       reviewed: s.reviewed + (isFirstReview ? 1 : 0),
@@ -273,12 +154,15 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
       correct: s.correct + (quality >= 3 ? 1 : 0),
     }));
 
-    // If failed, re-queue at end
+    if (xpEarned > 0) {
+      setSessionXP(prev => prev + xpEarned);
+      setLastXPGain(xpEarned);
+    }
+
     if (quality < 3) {
       setCards(prev => [...prev, { ...currentCard, isNew: false }]);
     }
 
-    // Move to next — delay so flip animation resets before showing new card
     setIsFlipped(false);
     setHasRevealed(false);
     if (currentIndex + 1 >= cards.length && quality >= 3) {
@@ -288,8 +172,129 @@ export function useReviewSession({ deckId, direction, newCardsLimit }: UseReview
       setTimeout(() => {
         setCurrentIndex(i => i + 1);
         setIsTransitioning(false);
-      }, 120);
+      }, 60);
     }
+
+    // --- Persist to DB in background (fire-and-forget) ---
+    const card = currentCard;
+    const progress = card.progress;
+    const result = sm2({
+      quality,
+      easeFactor: progress?.ease_factor ?? 2.5,
+      interval: progress?.interval_days ?? 0,
+      repetitions: progress?.repetitions ?? 0,
+    });
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+
+      const now = new Date().toISOString();
+      const today = now.split('T')[0];
+
+      // Fire all independent writes in parallel
+      Promise.all([
+        supabase.from('user_card_progress').upsert({
+          user_id: user.id,
+          card_id: card.id,
+          direction,
+          ease_factor: result.easeFactor,
+          interval_days: result.interval,
+          repetitions: result.repetitions,
+          next_review_at: result.nextReviewAt.toISOString(),
+          last_reviewed_at: now,
+        }, { onConflict: 'user_id,card_id,direction' }),
+
+        supabase.from('review_log').insert({
+          user_id: user.id,
+          card_id: card.id,
+          direction,
+          quality,
+        }),
+
+        // Daily stats
+        supabase.from('daily_stats')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('date', today)
+          .single()
+          .then(({ data: existingStats }) => {
+            if (existingStats) {
+              return supabase.from('daily_stats').update({
+                cards_reviewed: existingStats.cards_reviewed + (isFirstReview ? 1 : 0),
+                new_cards_learned: existingStats.new_cards_learned + (card.isNew ? 1 : 0),
+              }).eq('id', existingStats.id);
+            } else {
+              return supabase.from('daily_stats').insert({
+                user_id: user.id,
+                date: today,
+                cards_reviewed: isFirstReview ? 1 : 0,
+                new_cards_learned: card.isNew ? 1 : 0,
+              });
+            }
+          }),
+
+        // Streak
+        supabase.from('user_streaks')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+          .then(({ data: streak }) => {
+            if (streak) {
+              const lastDate = streak.last_review_date;
+              const yesterday = new Date();
+              yesterday.setDate(yesterday.getDate() - 1);
+              const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+              let newStreak = streak.current_streak;
+              if (lastDate === today) {
+                // Already reviewed today
+              } else if (lastDate === yesterdayStr) {
+                newStreak += 1;
+              } else {
+                newStreak = 1;
+              }
+
+              return supabase.from('user_streaks').update({
+                current_streak: newStreak,
+                longest_streak: Math.max(newStreak, streak.longest_streak),
+                last_review_date: today,
+              }).eq('id', streak.id);
+            } else {
+              return supabase.from('user_streaks').insert({
+                user_id: user.id,
+                current_streak: 1,
+                longest_streak: 1,
+                last_review_date: today,
+              });
+            }
+          }),
+
+        // XP
+        xpEarned > 0
+          ? supabase.from('user_xp')
+              .select('*')
+              .eq('user_id', user.id)
+              .single()
+              .then(({ data: currentXP }) => {
+                const oldTotal = currentXP?.total_xp ?? 0;
+                const newTotal = oldTotal + xpEarned;
+                const newLevelInfo = getLevelInfo(newTotal);
+                const oldLevelInfo = getLevelInfo(oldTotal);
+
+                if (newLevelInfo.level > oldLevelInfo.level) {
+                  setLevelUp(newLevelInfo);
+                }
+
+                return supabase.from('user_xp').upsert({
+                  user_id: user.id,
+                  total_xp: newTotal,
+                  current_level: newLevelInfo.level,
+                  updated_at: now,
+                }, { onConflict: 'user_id' });
+              })
+          : Promise.resolve(),
+      ]);
+    });
   }, [currentCard, currentIndex, cards.length, direction, supabase]);
 
   const flip = useCallback(() => {
